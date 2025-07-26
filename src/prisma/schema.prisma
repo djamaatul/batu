@@ -1,0 +1,121 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model users {
+  id              String            @id @default(uuid())
+  email           String            @unique
+  name            String
+  photo           String?
+  address         String?
+  password        String?
+  created_at      DateTime          @default(now())
+  roles           user_roles?
+  project_members project_members[]
+  project_tasks   project_tasks[]
+  comments        task_comments[]
+}
+
+model roles {
+  id         String        @id @default(uuid())
+  name       String
+  created_at DateTime      @default(now())
+  access     role_access[]
+  users      user_roles[]
+}
+
+model role_access {
+  id          String   @id @default(uuid())
+  role_id     String
+  access_code String   @unique
+  created_at  DateTime @default(now())
+  role        roles    @relation(fields: [role_id], references: [id])
+}
+
+model user_roles {
+  id         String   @id @default(uuid())
+  user_id    String   @unique
+  role_id    String   @unique
+  created_at DateTime @default(now())
+  role       roles    @relation(fields: [role_id], references: [id])
+  user       users    @relation(fields: [user_id], references: [id])
+}
+
+model projects {
+  id            String            @id @default(uuid())
+  name          String
+  created_by    String
+  created_at    DateTime          @default(now())
+  columns       project_columns[]
+  members       project_members[]
+  project_tasks project_tasks[]
+}
+
+model project_columns {
+  id         String          @id @default(uuid())
+  name       String
+  project_id String
+  created_by String
+  created_at DateTime        @default(now())
+  project    projects        @relation(fields: [project_id], references: [id])
+  tasks      project_tasks[]
+}
+
+model project_roles {
+  id              String                 @id @default(uuid())
+  name            String
+  created_at      DateTime               @default(now())
+  access          project_roles_access[]
+  project_members project_members[]
+}
+
+model project_roles_access {
+  id               String         @id @default(uuid())
+  access_code      String         @unique
+  project_roles_id String?
+  created_at       DateTime       @default(now())
+  project_roles    project_roles? @relation(fields: [project_roles_id], references: [id])
+}
+
+model project_members {
+  id              String        @id @default(uuid())
+  project_id      String
+  user_id         String
+  project_role_id String
+  created_at      DateTime      @default(now())
+  project         projects      @relation(fields: [project_id], references: [id])
+  user            users         @relation(fields: [user_id], references: [id])
+  project_role    project_roles @relation(fields: [project_role_id], references: [id])
+}
+
+model project_tasks {
+  id          String          @id @default(uuid())
+  title       String
+  user_id     String
+  project_id  String
+  column_id   String
+  description String?
+  due_date    DateTime?
+  created_at  DateTime        @default(now())
+  update_at   DateTime
+  comments    task_comments[]
+  project     projects        @relation(fields: [project_id], references: [id])
+  column      project_columns @relation(fields: [column_id], references: [id])
+  user        users           @relation(fields: [user_id], references: [id])
+}
+
+model task_comments {
+  id         String        @id @default(uuid())
+  user_id    String        @unique
+  task_id    String
+  content    String?
+  created_at DateTime      @default(now())
+  update_at  DateTime
+  user       users         @relation(fields: [user_id], references: [id])
+  task       project_tasks @relation(fields: [task_id], references: [id])
+}
