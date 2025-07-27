@@ -2,6 +2,8 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-prisma.$connect().catch(() => process.exit(1));
+prisma.$connect().catch(() => {
+  console.log("CONNECTION FAILED");
+});
 
 export default prisma;
